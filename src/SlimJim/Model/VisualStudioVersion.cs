@@ -38,5 +38,10 @@ namespace SlimJim.Model
 
 			return version;
 		}
+
+		public override string ToString()
+		{
+			return string.Format("{0} ({1})", Year, SlnFileVersionNumber);
+		}
 	}
 }

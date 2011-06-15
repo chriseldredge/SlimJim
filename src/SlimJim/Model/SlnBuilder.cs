@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using log4net;
 
 namespace SlimJim.Model
 {
 	public class SlnBuilder
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(SlnFileGenerator));
-
+		private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 		private readonly List<CsProj> projectsList;
 		private Sln builtSln;
 		private static SlnBuilder overriddenBuilder;
@@ -17,7 +17,7 @@ namespace SlimJim.Model
 			this.projectsList = projectsList;
 		}
 
-	    public virtual Sln BuildPartialGraphSln(SlnGenerationOptions options)
+		public virtual Sln BuildSln(SlnGenerationOptions options)
 		{
 	        this.options = options;
 	        builtSln = new Sln(options.SolutionName)
@@ -25,6 +25,27 @@ namespace SlimJim.Model
 					Version = options.VisualStudioVersion,
 					ProjectsRootDirectory = options.ProjectsRootDirectory
 				};
+
+			AddProjectsToSln(options);
+
+			return builtSln;
+		}
+
+		private void AddProjectsToSln(SlnGenerationOptions options)
+		{
+			if (options.Mode == SlnGenerationMode.PartialGraph)
+			{
+				AddPartialProjectGraphToSln(options);
+			}
+			else
+			{
+				AddAllProjectsToSln();
+			}
+		}
+
+		private void AddPartialProjectGraphToSln(SlnGenerationOptions options)
+		{
+			Log.Info("Building partial graph solution for target projects: " + string.Join(", ", options.TargetProjectNames));
 
 	        foreach (string targetProjectName in options.TargetProjectNames)
 			{
@@ -37,8 +58,13 @@ namespace SlimJim.Model
 
 				AddAfferentReferencesToProject(rootProject);
 			}
+		}
 
-			return builtSln;
+		private void AddAllProjectsToSln()
+		{
+			Log.Info("Building full graph solution.");
+
+			projectsList.ForEach(AddProject);
 		}
 
 	    private CsProj AddAssemblySubtree(string assemblyName)
@@ -59,7 +85,7 @@ namespace SlimJim.Model
 	    {
 	        if (project != null)
 	        {
-	            builtSln.AddProjects(project);
+				AddProject(project);
 
 	            IncludeEfferentProjectReferences(project);
 
@@ -69,6 +95,11 @@ namespace SlimJim.Model
                 }
 	        }
 	    }
+
+		private void AddProject(CsProj project)
+		{
+			builtSln.AddProjects(project);
+		}
 
 	    private void IncludeEfferentProjectReferences(CsProj project)
 	    {

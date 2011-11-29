@@ -12,40 +12,31 @@ namespace SlimJim.Infrastructure
     public class DynamicCsProjReader : CsProjReader
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DynamicCsProjReader));
+        const string targetName = "ResolveAssemblyReferences";
 
         public override CsProj Read(FileInfo csProjFile)
         {
             Log.Debug("Loading " + csProjFile);
 
-            const string targetName = "ResolveAssemblyReferences";
-
             ProjectInstance projectInstance;
-            IEnumerable<string> assemblyReferences = new string[0];
-            IEnumerable<string> projectReferences = new string[0];
-            var assemblyName = "";
-            var projectGuid = "";
-            
+
             try
             {
                 projectInstance = new Project(csProjFile.FullName).CreateProjectInstance();
-
-                var result = BuildManager.DefaultBuildManager.Build(new BuildParameters(new ProjectCollection()), new BuildRequestData(projectInstance, new[] { targetName }));
-
-                if (result.OverallResult != BuildResultCode.Success)
-                {
-                    Log.WarnFormat("Failed to execute target {0} on project {1}: {2}", targetName, csProjFile, result.Exception.Message);
-                }
-
-                assemblyReferences = projectInstance.GetItems("Reference").Select(r => UnQualify(r.EvaluatedInclude));
-                projectReferences = projectInstance.GetItems("ProjectReference").Select(r => r.GetMetadataValue("Project"));
-                
-                assemblyName = projectInstance.GetPropertyValue("AssemblyName");
-                projectGuid = projectInstance.GetPropertyValue("ProjectGuid");
             }
             catch (InvalidProjectFileException e)
             {
                 Log.ErrorFormat("Failed to load project: {0}", e.Message);
+                return null;
             }
+
+            InvokeMSBuildTarget(projectInstance);
+
+            var assemblyReferences = projectInstance.GetItems("Reference").Select(r => UnQualify(r.EvaluatedInclude));
+            var projectReferences = projectInstance.GetItems("ProjectReference").Select(r => r.GetMetadataValue("Project"));
+                
+            var assemblyName = projectInstance.GetPropertyValue("AssemblyName");
+            var projectGuid = projectInstance.GetPropertyValue("ProjectGuid");
 
             return new CsProj
             {
@@ -55,6 +46,16 @@ namespace SlimJim.Infrastructure
                 ReferencedAssemblyNames = assemblyReferences.ToList(),
                 ReferencedProjectGuids = projectReferences.ToList()
             };
+        }
+
+        public virtual void InvokeMSBuildTarget(ProjectInstance projectInstance)
+        {
+            var result = BuildManager.DefaultBuildManager.Build(new BuildParameters(new ProjectCollection()), new BuildRequestData(projectInstance, new[] { targetName }));
+
+            if (result.OverallResult != BuildResultCode.Success)
+            {
+                Log.WarnFormat("Failed to execute target {0} on project {1}: {2}", targetName, projectInstance.FullPath, result.Exception.Message);
+            }
         }
     }
 }

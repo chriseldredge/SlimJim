@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using log4net;
+using log4net.Core;
 using NDesk.Options;
 using SlimJim.Model;
 
@@ -40,6 +42,8 @@ namespace SlimJim.Infrastructure
 			            			v => options.AddAdditionalSearchPaths(v) },
 			            		{ "o|out=", "directory {PATH} where you want the .sln file written", 
 			            			v => options.SlnOutputPath = v },
+                                { "d|dynamic", "execute ResolveAssemblyReferences target on each project to obtain references dynamically to work with OpenWrap",
+                                    v => options.DynamicAssemblyReferenceResolution = true },
 			            		{ "v|version=", "Visual Studio {VERSION} compatibility (2008, 2010 default)", 
 			            			v => options.VisualStudioVersion = TryParseVersionNumber(v) },
 			            		{ "n|name=", "alternate {NAME} for solution file", 
@@ -51,7 +55,13 @@ namespace SlimJim.Infrastructure
 			            		{ "i|ignore=", "ignore directories whose name matches the given {REGEX_PATTERN} (repeat for multiple ignores)", 
 			            			v => options.AddIgnoreDirectoryPatterns(v) },
 								{ "open", "open the solution in Visual Studio", 
-			            			v => options.OpenInVisualStudio = true }
+			            			v => options.OpenInVisualStudio = true },
+								{ "debug", "attach debugger", 
+			            			v => Debugger.Launch() },
+                                { "q|quiet", "reduce logging verbosity to errors only",
+                                    v => options.LoggingThreshold = Level.Error },
+                                { "verbose", "increase logging verbosity to include debug messages",
+                                    v => options.LoggingThreshold = Level.Debug }
 			            	};
 
 			try

@@ -31,6 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL" />
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.5.9.10348\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -53,7 +54,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infrastructure\ArgsOptionsBuilderTests.cs" />
-    <Compile Include="Infrastructure\CsProjReaderTests.cs" />
+    <Compile Include="Infrastructure\DynamicCsProjReaderTests.cs" />
+    <Compile Include="Infrastructure\XmlParsingCsProjReaderTests.cs" />
     <Compile Include="Infrastructure\CsProjRepositoryTests.cs" />
     <Compile Include="Infrastructure\ProjectFileFinderTests.cs" />
     <Compile Include="Infrastructure\SlnFileRendererTests.cs" />
@@ -81,6 +83,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="SampleFiles\CsProj\BreaksThings.csproj" />
+    <Content Include="SampleFiles\CsProj\Malformed.csproj" />
+    <Content Include="SampleFiles\CsProj\Dynamic.csproj" />
     <Content Include="SampleFiles\CsProj\NoProjectReferences.csproj" />
     <Content Include="SampleFiles\CsProj\FQAssemblyName.csproj">
       <SubType>Designer</SubType>

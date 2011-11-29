@@ -1,18 +1,14 @@
 using System.Collections.Generic;
 using System.IO;
-using log4net;
 using SlimJim.Model;
 
 namespace SlimJim.Infrastructure
 {
 	public class CsProjRepository : ICsProjRepository
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(CsProjRepository));
-
 		public CsProjRepository()
 		{
 			Finder = new ProjectFileFinder();
-			Reader = new CsProjReader();
 		}
 
 		public virtual List<CsProj> LookupCsProjsFromDirectory(SlnGenerationOptions options)
@@ -20,10 +16,15 @@ namespace SlimJim.Infrastructure
 			IgnoreConfiguredDirectoryPatterns(options);
 
 			List<FileInfo> files = FindAllProjectFiles(options);
-			List<CsProj> projects = ReadProjectFilesIntoCsProjObjects(files);
+			List<CsProj> projects = ReadProjectFilesIntoCsProjObjects(files, options);
 
 			return projects;
 		}
+
+        public virtual CsProjReader CreateCsProjReader(SlnGenerationOptions options)
+        {
+            return options.DynamicAssemblyReferenceResolution ? (CsProjReader)new DynamicCsProjReader() : new XmlParsingCsProjReader();
+        }
 
 		private void IgnoreConfiguredDirectoryPatterns(SlnGenerationOptions options)
 		{
@@ -45,14 +46,13 @@ namespace SlimJim.Infrastructure
 			return files;
 		}
 
-		private List<CsProj> ReadProjectFilesIntoCsProjObjects(List<FileInfo> files)
+        private List<CsProj> ReadProjectFilesIntoCsProjObjects(List<FileInfo> files, SlnGenerationOptions options)
 		{
-			List<CsProj> projects = files.ConvertAll(f => Reader.Read(f));
+            List<CsProj> projects = files.ConvertAll(f => CreateCsProjReader(options).Read(f));
 			projects.RemoveAll(p => p == null);
 			return projects;
 		}
 
 		public ProjectFileFinder Finder { get; set; }
-		public CsProjReader Reader { get; set; }
 	}
 }

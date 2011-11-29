@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using log4net.Core;
 
 namespace SlimJim.Model
 {
@@ -22,6 +23,7 @@ namespace SlimJim.Model
 			ignoreDirectoryPatterns = new List<string>();
 			TargetProjectNames = new List<string>();
 			VisualStudioVersion = VisualStudioVersion.VS2010;
+		    LoggingThreshold = Level.Info;
 		}
 
 		public List<string> TargetProjectNames { get; private set; }
@@ -39,6 +41,8 @@ namespace SlimJim.Model
 		public bool IncludeEfferentAssemblyReferences { get; set; }
 		public bool ShowHelp { get; set; }
 		public bool OpenInVisualStudio { get; set; }
+        public Level LoggingThreshold { get; set; }
+        public bool DynamicAssemblyReferenceResolution { get; set; }
 
 		public List<string> AdditionalSearchPaths
 		{
@@ -118,8 +122,8 @@ namespace SlimJim.Model
 		{
 			get { return ignoreDirectoryPatterns; }
 		}
-
-		public void AddAdditionalSearchPaths(params string[] searchPaths)
+        
+	    public void AddAdditionalSearchPaths(params string[] searchPaths)
 		{
 			additionalSearchPaths.AddRange(searchPaths);
 		}

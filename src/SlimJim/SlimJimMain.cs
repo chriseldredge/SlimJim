@@ -14,8 +14,9 @@ namespace SlimJim
 			var consoleAppender = new ConsoleAppender()
 									{
 										Layout = new PatternLayout("%message%newline"),
-										Threshold = Level.Warn
+										Threshold = Level.Info
 									};
+
 			log4net.Config.BasicConfigurator.Configure(consoleAppender);
 
 			var log = LogManager.GetLogger(typeof(SlnFileGenerator));
@@ -30,6 +31,8 @@ namespace SlimJim
 			}
 			else
 			{
+			    consoleAppender.Threshold = options.LoggingThreshold;
+
 				var solutionPath = fileGenerator.GenerateSolutionFile(options);
 				
 				if (options.OpenInVisualStudio)

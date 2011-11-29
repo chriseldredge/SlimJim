@@ -65,7 +65,7 @@ namespace SlimJim.Infrastructure
 		{
 			files.Add(projects[0]);
 
-			Log.Debug(projects[0].FullName);
+			Log.Debug("Found " + projects[0].FullName);
 		}
 
 		public bool PathIsIgnored(DirectoryInfo directory)

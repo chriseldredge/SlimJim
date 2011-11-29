@@ -1,3 +1,4 @@
+using log4net.Core;
 using NUnit.Framework;
 using SlimJim.Infrastructure;
 using SlimJim.Model;
@@ -8,7 +9,6 @@ namespace SlimJim.Test.Infrastructure
 	public class ArgsOptionsBuilderTests
 	{
 		private SlnGenerationOptions options;
-		private bool parseErrorHandled;
 		private const string WorkingDirectory = @"C:\WorkingDir";
 
 		[Test]
@@ -23,6 +23,8 @@ namespace SlimJim.Test.Infrastructure
 			Assert.That(options.IncludeEfferentAssemblyReferences, Is.False, "IncludeEfferentAssemblyReferences");
 			Assert.That(options.ShowHelp, Is.False, "ShowHelp");
 			Assert.That(options.OpenInVisualStudio, Is.False, "OpenInVisualStudio");
+            Assert.That(options.DynamicAssemblyReferenceResolution, Is.False, "DynamicAssemblyReferenceResolution");
+            Assert.That(options.LoggingThreshold, Is.EqualTo(Level.Info), "LoggingThreshold");
 		}
 
 		[Test]

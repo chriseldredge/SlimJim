@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Rhino.Mocks;
+using Rhino.Mocks.Interfaces;
 using SlimJim.Infrastructure;
 using SlimJim.Model;
 using SlimJim.Test.SampleFiles;
@@ -19,7 +21,7 @@ namespace SlimJim.Test.Infrastructure
 		private readonly CsProj proj1 = new CsProj {AssemblyName = "Proj1"};
 		private readonly CsProj proj2 = new CsProj {AssemblyName = "Proj1"};
 		private ProjectFileFinder finder;
-		private CsProjReader reader;
+        private CsProjReader reader;
 		private CsProjRepository repository;
 		private SlnGenerationOptions options;
 
@@ -29,14 +31,13 @@ namespace SlimJim.Test.Infrastructure
 			options = new SlnGenerationOptions(StartPath);
 			finder = MockRepository.GenerateStrictMock<ProjectFileFinder>();
 			reader = MockRepository.GenerateStrictMock<CsProjReader>();
-			repository = new CsProjRepository
-			{
-				Finder = finder,
-				Reader = reader
-			};
+		    repository = MockRepository.GenerateStub<CsProjRepository>();
+		    repository.Finder = finder;
+		    repository.Stub(r => r.CreateCsProjReader(Arg<SlnGenerationOptions>.Is.Anything)).Return(reader);
+            repository.Stub(r => r.LookupCsProjsFromDirectory(Arg<SlnGenerationOptions>.Is.Anything)).CallOriginalMethod(OriginalCallOptions.NoExpectation);
 		}
 
-		[TearDown]
+	    [TearDown]
 		public void AfterEach()
 		{
 			finder.VerifyAllExpectations();
@@ -48,8 +49,18 @@ namespace SlimJim.Test.Infrastructure
 		{
 			repository = new CsProjRepository();
 			Assert.That(repository.Finder, Is.Not.Null, "Should have created instance of CsProjFinder.");
-			Assert.That(repository.Reader, Is.Not.Null, "Should have created instance of CsProjReader.");
+			Assert.That(repository.CreateCsProjReader(new SlnGenerationOptions(Environment.CurrentDirectory)), Is.Not.Null, "Should have created instance of XmlParsingCsProjReader.");
 		}
+
+        [Test]
+        public void CreatesAlternateReader()
+        {
+            options.DynamicAssemblyReferenceResolution = true;
+
+            repository = new CsProjRepository();
+            
+            Assert.That(repository.CreateCsProjReader(options), Is.InstanceOf<DynamicCsProjReader>());
+        }
 
 		[Test]
 		public void GetsFilesFromFinderAndProcessesThemWithCsProjReader()

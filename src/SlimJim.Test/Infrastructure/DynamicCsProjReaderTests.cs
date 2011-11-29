@@ -6,27 +6,23 @@ using SlimJim.Model;
 namespace SlimJim.Test.Infrastructure
 {
 	[TestFixture]
-	public class CsProjReaderTests
+	public class DynamicCsProjReaderTests
 	{
 		private FileInfo file;
 
 		[Test]
-		public void ReadsFileContentsIntoObject()
+		public void InvokesTargetBeforeGettingReferences()
 		{
-			CsProj project = GetProject("Simple");
+			CsProj project = GetProject("Dynamic");
 
 			Assert.That(project.Guid, Is.EqualTo("{4A37C916-5AA3-4C12-B7A8-E5F878A5CDBA}"));
 			Assert.That(project.AssemblyName, Is.EqualTo("MyProject"));
 			Assert.That(project.Path, Is.EqualTo(file.FullName));
 			Assert.That(project.ReferencedAssemblyNames, Is.EqualTo(new[]
 			                                                       	{
-																							"System",
-																							"System.Core",
-																							"System.Xml.Linq",
-																							"System.Data.DataSetExtensions",
-																							"Microsoft.CSharp",
-																							"System.Data",
-																							"System.Xml"
+                                                                                            "Dynamic.Bang",
+																							"System.Core"
+																							
 			                                                       	}));
 			Assert.That(project.ReferencedProjectGuids, Is.EqualTo(new[]
 			                                                      	{
@@ -35,34 +31,16 @@ namespace SlimJim.Test.Infrastructure
 			                                                      	}));
 		}
 
-		[Test]
-		public void TakesOnlyNameOfFullyQualifiedAssemblyName()
-		{
-			CsProj project = GetProject("FQAssemblyName");
-
-			Assert.That(project.ReferencedAssemblyNames, Contains.Item("NHibernate"));
-		}
-
-		[Test]
-		public void NoProjectReferencesDoesNotCauseNRE()
-		{
-			CsProj project = GetProject("NoProjectReferences");
-
-			Assert.That(project.ReferencedProjectGuids, Is.Empty);
-		}
-
-		[Test]
-		public void NoAssemblyName_ReturnsNull()
-		{
-			CsProj project = GetProject("BreaksThings");
-
-			Assert.That(project, Is.Null);
-		}
+        [Test]
+        public void IgnoresUnloadableProjects()
+        {
+            Assert.That(GetProject("Malformed"), Is.Null);
+        }
 
 		private CsProj GetProject(string fileName)
 		{
 			file = SampleFiles.SampleFileHelper.GetCsProjFile(fileName);
-			var reader = new CsProjReader();
+			var reader = new DynamicCsProjReader();
 			return reader.Read(file);
 		}
 	}
